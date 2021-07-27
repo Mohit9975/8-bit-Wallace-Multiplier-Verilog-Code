@@ -76,7 +76,7 @@ module top_module(
             end
     endgenerate
                               
-    assign p2[0]= part_prod[3][3];
+    assign p2[0]= part_prod[3][0];
     assign p2[9]= part_prod[5][7];
     ha ha_stage2_1 (.a(part_prod[3][1]), .b(part_prod[4][0]), .s(p2[1]), .c(c2[0]));
     ha ha_stage2_2 (.a(part_prod[4][7]), .b(part_prod[5][6]), .s(p2[8]), .c(c2[7]));
