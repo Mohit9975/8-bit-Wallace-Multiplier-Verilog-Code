@@ -1,0 +1,153 @@
+module Wallace(
+    input [7:0] a,
+    input [7:0] b,
+    output [15:0] prod);
+    
+    //Array to store partial products-----------------------------
+    reg [7:0] part_prod [0:7];
+    
+    wire [9:0] p1, p2, p4, c5, c6;
+    wire [7:0] c1, c2, c3, c4;
+    wire [15:0] p7;
+    wire [14:0] p5, p6;
+    wire [12:0] p3;
+    integer i;
+    //Loop for storing partial products---------------------------
+    always @(*)
+        begin
+            for(i=0; i<8; i= i+1)
+                begin
+                    if(b[i]==0)
+                        begin
+                        part_prod[i]<= 8'd0;
+                        end
+                    else
+                        begin
+                        part_prod[i]<= a;
+                        end
+                end
+        end
+    
+    //for 1st group of 3 i.e partial product 0 to 2--------------Can be done using generate for loop as the following loops are applied
+    
+    assign p1[0]= part_prod[0][0];
+    ha ha_stage1_1 (.a(part_prod[0][1]), .b(part_prod[1][0]), .s(p1[1]), .c(c1[0]));
+    fa fa_stage1_1 (.a(part_prod[0][2]), .b(part_prod[1][1]), .cin(part_prod[2][0]), .s(p1[2]), .cout(c1[1]));
+    fa fa_stage1_2 (.a(part_prod[0][3]), .b(part_prod[1][2]), .cin(part_prod[2][1]), .s(p1[3]), .cout(c1[2]));  
+    fa fa_stage1_3 (.a(part_prod[0][4]), .b(part_prod[1][3]), .cin(part_prod[2][2]), .s(p1[4]), .cout(c1[3]));
+    fa fa_stage1_4 (.a(part_prod[0][5]), .b(part_prod[1][4]), .cin(part_prod[2][3]), .s(p1[5]), .cout(c1[4]));
+    fa fa_stage1_5 (.a(part_prod[0][6]), .b(part_prod[1][5]), .cin(part_prod[2][4]), .s(p1[6]), .cout(c1[5]));
+    fa fa_stage1_6 (.a(part_prod[0][7]), .b(part_prod[1][6]), .cin(part_prod[2][5]), .s(p1[7]), .cout(c1[6]));
+    ha ha_stage1_2 (.a(part_prod[1][7]), .b(part_prod[2][6]), .s(p1[8]), .c(c1[7]));
+    assign p1[9]= part_prod[2][7];
+    //----------------------------------------------------------
+                    
+                    
+    //for 2nd group of 3 i.e partial product 3 to 5--------------
+
+    genvar j;                
+    generate
+
+    
+        for(j=0; j<6; j=j+1)
+            begin: fa_instantiation1
+                fa fa_stage2 (.a(part_prod[3][j+2]), .b(part_prod[4][j+1]), .cin(part_prod[5][j+0]), .s(p2[j+2]), .cout(c2[j+1]));
+            end
+    endgenerate
+                              
+    assign p2[0]= part_prod[3][3];
+    assign p2[9]= part_prod[5][7];
+    ha ha_stage2_1 (.a(part_prod[3][1]), .b(part_prod[4][0]), .s(p2[1]), .c(c2[0]));
+    ha ha_stage2_2 (.a(part_prod[4][7]), .b(part_prod[5][6]), .s(p2[8]), .c(c2[7]));
+    //----------------------------------------------------------                          
+    
+    //Stage 3
+
+    genvar k;
+	generate
+
+        for(k=0; k<6; k=k+1)
+            begin: fa_instantiation2
+                fa fa_stage3 (.a(c2[k+2]), .b(part_prod[6][k+1]), .cin(part_prod[7][k+0]), .s(p4[k+2]), .cout(c4[k+1]));
+            end
+    endgenerate
+                              
+     assign p4[0]= c2[0];
+     assign p4[9]= part_prod[7][7];
+     ha ha_stage3_1 (.a(c2[1]), .b(part_prod[6][0]), .s(p4[1]), .c(c4[0]));
+     ha ha_stage3_2 (.a(part_prod[6][7]), .b(part_prod[7][6]), .s(p4[8]), .c(c4[7]));
+                              
+     // for p3 and c3                         
+                              
+     assign p3[1:0]= p1[1:0];
+     assign p3[12:10]= p2[9:7];
+     ha ha_stage3 (.a(p1[2]), .b(c1[0]), .s(p3[2]), .c(c3[0]));
+
+    genvar l;
+      generate
+
+          for(l=0; l<7; l=l+1)
+            begin: fa_instantiation3
+                fa fa_stage3 (.a(p1[l+3]), .b(c1[l+1]), .cin(p2[l+0]), .s(p3[l+3]), .cout(c3[l+1]));
+            end
+    endgenerate
+     
+    // for p5 and c5                
+    
+    assign p5[2:0]= p3[2:0];
+    assign p5[14:13]= p4[9:8];
+    ha ha_stage4_1 (.a(p3[3]), .b(c3[0]), .s(p5[3]), .c(c5[0]));
+    ha ha_stage4_2 (.a(p3[4]), .b(c3[1]), .s(p5[4]), .c(c5[1]));
+    ha ha_stage4_3 (.a(p3[11]), .b(p4[6]), .s(p5[11]), .c(c5[8]));
+    ha ha_stage4_4 (.a(p3[12]), .b(p4[7]), .s(p5[12]), .c(c5[9]));
+
+    genvar m;
+       generate
+
+           for(m=0; m<6; m=m+1)
+            begin: fa_instantiation4
+                fa fa_stage4 (.a(p3[m+5]), .b(c3[m+2]), .cin(p4[m+0]), .s(p5[m+5]), .cout(c5[m+2]));
+            end
+    endgenerate
+      
+    //for p6 and c6
+    assign p6[3:0]= p5[3:0];
+    ha ha_stage5_1 (.a(p5[4]), .b(c5[0]), .s(p6[4]), .c(c6[0]));
+    ha ha_stage5_2 (.a(p5[5]), .b(c5[1]), .s(p6[5]), .c(c6[1]));
+    ha ha_stage5_3 (.a(p5[6]), .b(c5[2]), .s(p6[6]), .c(c6[2]));
+    ha ha_stage5_4 (.a(p5[14]), .b(c4[7]), .s(p6[14]), .c(c6[9]));
+    
+    genvar n;
+    generate
+
+        for(n=0; n<7; n=n+1)
+            begin: fa_instantiation5
+                fa fa_stage5 (.a(p5[n+7]), .b(c5[n+3]), .cin(c4[n+0]), .s(p6[n+7]), .cout(c6[n+3]));
+            end
+    endgenerate
+                    
+    assign p7= {c6,5'b00000};
+    assign prod= p6 + p7;
+                    
+endmodule
+
+module ha (
+           input a,
+           input b,
+           output s,
+           output c);
+    assign s= a^b;
+    assign c= a&b;
+    
+endmodule
+
+module fa (
+    input a,
+    input b,
+    input cin,
+    output s,
+    output cout);
+    
+    assign s= a^b^cin;
+    assign cout= a&b | b&cin | cin&a;
+endmodule
