@@ -1,4 +1,4 @@
-module Wallace(
+module top_module(
     input [7:0] a,
     input [7:0] b,
     output [15:0] prod);
@@ -6,7 +6,8 @@ module Wallace(
     //Array to store partial products-----------------------------
     reg [7:0] part_prod [0:7];
     
-    wire [9:0] p1, p2, p4, c5, c6;
+    wire [9:0] p1, p2, p4, c5;
+    wire [10:0] c6;
     wire [7:0] c1, c2, c3, c4;
     wire [15:0] p7;
     wire [14:0] p5, p6;
@@ -28,7 +29,7 @@ module Wallace(
                 end
         end
     
-    //for 1st group of 3 i.e partial product 0 to 2--------------Can be done using generate for loop as the following loops are applied
+    //for 1st group of 3 i.e partial product 0 to 2--------------
     
     assign p1[0]= part_prod[0][0];
     ha ha_stage1_1 (.a(part_prod[0][1]), .b(part_prod[1][0]), .s(p1[1]), .c(c1[0]));
@@ -115,7 +116,7 @@ module Wallace(
     ha ha_stage5_1 (.a(p5[4]), .b(c5[0]), .s(p6[4]), .c(c6[0]));
     ha ha_stage5_2 (.a(p5[5]), .b(c5[1]), .s(p6[5]), .c(c6[1]));
     ha ha_stage5_3 (.a(p5[6]), .b(c5[2]), .s(p6[6]), .c(c6[2]));
-    ha ha_stage5_4 (.a(p5[14]), .b(c4[7]), .s(p6[14]), .c(c6[9]));
+    ha ha_stage5_4 (.a(p5[14]), .b(c4[7]), .s(p6[14]), .c(c6[10]));
     
     genvar n;
     generate
